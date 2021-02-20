@@ -9,10 +9,10 @@ PROBLEMS="A B C"
 [ $# -ne 0 ] && PROBLEMS=$*
 
 EXECDIR="./bin"
-[[ -d "$EXECDIR" ]] || make $PROBLEMS -s 
+[[ -d "$EXECDIR" ]] || make ${PROBLEMS} -s
 
 for problem in $PROBLEMS; do
-    echo "## RUNNING TESTS FOR PROBLEM $problem"
+    echo "## RUNNING TESTS FOR PROBLEM $problem..."
     for f in "$TESTDIR/$problem/"*.in; do 
         file=${f%.*}
         [[ -e "$file.out" ]] || break

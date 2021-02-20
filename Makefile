@@ -7,33 +7,25 @@ CXX_LINK_FLAGS=-lm
 
 # Makefile rules
 .PHONY:all 
-all: pre-build bin/A bin/B bin/C 
-	@$(MAKE) -s post-build
+all: pre-build A B C
 
 .PHONY:A
-A: pre-build bin/A
-	@$(MAKE) -s post-build
+A: pre-build bin/A.out
 
 .PHONY:B
-B: pre-build bin/B 
-	@$(MAKE) -s post-build
+B: pre-build bin/B.out
 
 .PHONY:C
-C: pre-build bin/C
-	@$(MAKE) -s post-build
-
-bin/%: src/%/main.cpp
-	@echo "## Compiling $<"
-	@$(CXX) $(CXX_FLAGS) $(CXX_WARN_FLAGS) -o $@.out $< $(CXX_LINK_FLAGS)
+C: pre-build bin/C.out
+	
+bin/%.out: src/%/main.cpp
+	@echo -n "## Compiling $<  "
+	@$(CXX) $(CXX_FLAGS) $(CXX_WARN_FLAGS) -o $@ $< $(CXX_LINK_FLAGS)
+	@echo "DONE!"
 
 .PHONY: pre-build
 pre-build: 
-	@echo "## Compiling source files..."
 	@mkdir -p bin
 
-.PHONY:post-build
-post-build:
-	@echo "## Finished!"
-	
 clean:
 	@rm -rf bin
