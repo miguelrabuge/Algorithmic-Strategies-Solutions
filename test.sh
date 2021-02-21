@@ -9,7 +9,7 @@ PROBLEMS="A B C"
 [ $# -ne 0 ] && PROBLEMS=$*
 
 EXECDIR="./bin"
-[[ -d "$EXECDIR" ]] || make ${PROBLEMS} -s
+make $PROBLEMS -s || exit 1;
 
 for problem in $PROBLEMS; do
     echo "## RUNNING TESTS FOR PROBLEM $problem..."
@@ -19,7 +19,7 @@ for problem in $PROBLEMS; do
 
         DIFFOUT=$(diff -y "$file.out"  <("./$EXECDIR/$problem.out" < "$file.in"))
     
-        if [ -z "$DIFFOUT" ];then
+        if [ -z "$DIFFOUT" ]; then
             echo -e ✅ "${GREEN}TEST PASSED!!${RESET}" "($file)" 
         else
             echo -e ❌ "${RED}TEST FAILED!!${RESET}" "($file)" 
