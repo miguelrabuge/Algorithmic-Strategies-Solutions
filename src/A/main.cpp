@@ -1,13 +1,24 @@
 #include <algorithm>
 #include <iostream>
+#include <optional>
+#include <unordered_map>
 #include <vector>
 
 using Matrix = std::vector<std::vector<int>>;
 
-class Board {
+enum class SwipeAction {
+	SWIPE_LEFT,
+	SWIPE_RIGHT,
+	SWIPE_UP,
+	SWIPE_DOWN,
+	NONE,
+};
+
+class TileBoard {
+private:
 	Matrix m_matrix;
 	int m_moves;
-	int m_max_moves;
+	int m_tiles;
 
 	template <typename RandomIter>
 	void horizontal_swipe(RandomIter first, RandomIter last) {
@@ -17,7 +28,7 @@ class Board {
 			if ((*i) == 0)
 				(*i) += (*j), (*j) = 0;
 			else if ((*i) == (*j))
-				(*i) += (*j), (*j) = 0, ++i;
+				(*i) += (*j), (*j) = 0, ++i, --m_tiles;
 			else if (i + 1 < j)
 				++i, --j;
 			else
@@ -33,7 +44,7 @@ class Board {
 			if ((*i)[column] == 0)
 				(*i)[column] += (*j)[column], (*j)[column] = 0;
 			else if ((*i)[column] == (*j)[column])
-				(*i)[column] += (*j)[column], (*j)[column] = 0, ++i;
+				(*i)[column] += (*j)[column], (*j)[column] = 0, ++i, --m_tiles;
 			else if (i + 1 < j)
 				++i, --j;
 			else
@@ -42,44 +53,56 @@ class Board {
 	}
 
 public:
-	Board(std::size_t const size, int const max_moves) : m_matrix(size, std::vector<int>(size, 0)), m_moves(0), m_max_moves(max_moves) {}
+	TileBoard(std::size_t const size) : m_matrix(size, std::vector<int>(size, 0)), m_moves(0), m_tiles(0) {}
 
-	inline void swipe_left() {
-		for (auto &row : m_matrix)
-			Board::horizontal_swipe(row.begin(), row.end());
-		++m_moves;
+	int move_count() const {
+		return m_moves;
 	}
 
-	inline void swipe_right() {
-		for (auto &row : m_matrix)
-			Board::horizontal_swipe(row.rbegin(), row.rend());
-		++m_moves;
+	int tile_count() const {
+		return m_tiles;
 	}
 
-	inline void swipe_up() {
-		for (std::size_t col = 0; col < m_matrix.size(); ++col) {
-			Board::vertical_swipe(m_matrix.begin(), m_matrix.end(), col);
+	void swipe_left() {
+		for (auto &row : m_matrix) {
+			TileBoard::horizontal_swipe(row.begin(), row.end());
 		}
 		++m_moves;
 	}
 
-	inline void swipe_down() {
-		for (std::size_t col = 0; col < m_matrix.size(); ++col) {
-			Board::vertical_swipe(m_matrix.rbegin(), m_matrix.rend(), col);
+	void swipe_right() {
+		for (auto &row : m_matrix) {
+			TileBoard::horizontal_swipe(row.rbegin(), row.rend());
 		}
 		++m_moves;
 	}
 
-	inline friend std::istream &operator>>(std::istream &is, Board &board) {
+	void swipe_up() {
+		for (std::size_t col = 0; col < m_matrix.size(); ++col) {
+			TileBoard::vertical_swipe(m_matrix.begin(), m_matrix.end(), col);
+		}
+		++m_moves;
+	}
+
+	void swipe_down() {
+		for (std::size_t col = 0; col < m_matrix.size(); ++col) {
+			TileBoard::vertical_swipe(m_matrix.rbegin(), m_matrix.rend(), col);
+		}
+		++m_moves;
+	}
+
+	friend std::istream &operator>>(std::istream &is, TileBoard &board) {
 		for (std::size_t i = 0; i < board.m_matrix.size(); ++i) {
 			for (std::size_t j = 0; j < board.m_matrix.size(); ++j) {
 				std::cin >> board.m_matrix[i][j];
+				if (board.m_matrix[i][j])
+					++board.m_tiles;
 			}
 		}
 		return is;
 	}
 
-	inline friend std::ostream &operator<<(std::ostream &os, Board &board) {
+	friend std::ostream &operator<<(std::ostream &os, TileBoard &board) {
 		for (std::size_t i = 0; i < board.m_matrix.size(); ++i) {
 			for (std::size_t j = 0; j < board.m_matrix.size(); ++j) {
 				os << board.m_matrix[i][j] << " ";
@@ -87,6 +110,55 @@ public:
 			os << "\n";
 		}
 		return os;
+	}
+};
+
+class GameSolver {
+	int m_max_moves;
+	int m_best;
+	std::unordered_map<int, int> m_memo;
+
+	bool backtrack(TileBoard board, SwipeAction action) {
+
+		if (board.move_count() == m_max_moves)
+			return false;
+
+		if (board.tile_count() == 1) {
+			m_memo[board.move_count()] = board.tile_count();
+			m_best = std::min(board.move_count(), m_best);
+			return true;
+		}
+
+		if (action == SwipeAction::SWIPE_LEFT)
+			board.swipe_left();
+		else if (action == SwipeAction::SWIPE_RIGHT)
+			board.swipe_right();
+		else if (action == SwipeAction::SWIPE_UP)
+			board.swipe_up();
+		else if (action == SwipeAction::SWIPE_DOWN)
+			board.swipe_down();
+
+		if (!m_memo[board.move_count()])
+			m_memo[board.move_count()] = std::numeric_limits<int>::max();
+
+		if (board.tile_count() > m_memo[board.move_count()])
+			return false;
+		m_memo[board.move_count()] = board.tile_count();
+
+		return backtrack(board, SwipeAction::SWIPE_LEFT) |
+		       backtrack(board, SwipeAction::SWIPE_RIGHT) |
+		       backtrack(board, SwipeAction::SWIPE_UP) |
+		       backtrack(board, SwipeAction::SWIPE_DOWN);
+	}
+
+public:
+	GameSolver(int max_moves) : m_max_moves(max_moves), m_best(max_moves) {}
+
+	std::string solve(TileBoard &board) {
+		m_memo[board.move_count()] = board.tile_count();
+		return backtrack(board, SwipeAction::NONE)
+			   ? std::to_string(m_best)
+			   : "no solution";
 	}
 };
 
@@ -101,16 +173,10 @@ int main(void) {
 	std::cin >> tests;
 	while (tests--) {
 		std::cin >> size >> max_moves;
-		Board board(size, max_moves);
+		GameSolver solver(max_moves);
+		TileBoard board(size);
 		std::cin >> board;
-
-		// ! Use std::cerr stream for debugging purposes
-
-		// std::cerr << "Before Swipe: \n" << board << '\n';
-		// board.swipe_left();
-		// std::cerr << "After Swipe: \n" <<  board;
-		// std::cerr << "=================================\n";
+		std::cout << solver.solve(board) << "\n";
 	}
-
 	return EXIT_SUCCESS;
 }
