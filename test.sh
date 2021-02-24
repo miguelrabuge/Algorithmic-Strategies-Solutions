@@ -15,14 +15,16 @@ for problem in $PROBLEMS; do
     echo "## RUNNING TESTS FOR PROBLEM $problem..."
     for f in "$TESTDIR/$problem/"*.in; do 
         file=${f%.*}
-        [[ -e "$file.out" ]] || break
+        [[ -e "$file.out" ]] || continue;
+        
+        OUT=$("./$EXECDIR/$problem.out" < "$file.in")
+        DIFF=$(diff -y "$file.out"  <(echo -e "$OUT"))
 
-        DIFFOUT=$(diff -y "$file.out"  <(TIME=time "./$EXECDIR/$problem.out" < "$file.in"))
         if [ $? -eq 0 ]; then
             echo -e ✅ "${GREEN}TEST PASSED!!${RESET}" "($file)" 
         else
             echo -e ❌ "${RED}TEST FAILED!!${RESET}" "($file)" 
-            [[ $SHOW_DIFF == "true" ]] && echo -e "$DIFFOUT"
+            [[ $SHOW_DIFF == "true" ]] && echo -e "$DIFF"
         fi
     done 
 done

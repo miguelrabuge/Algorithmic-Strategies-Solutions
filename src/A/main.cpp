@@ -53,7 +53,10 @@ private:
 	}
 
 public:
-	TileBoard(std::size_t const size) : m_matrix(size, std::vector<int>(size, 0)), m_moves(0), m_tiles(0) {}
+	TileBoard(std::size_t const size)
+	    : m_matrix(size, std::vector<int>(size, 0)),
+	      m_moves(0),
+	      m_tiles(0) {}
 
 	int move_count() const {
 		return m_moves;
@@ -115,8 +118,8 @@ public:
 
 class GameSolver {
 	int m_max_moves;
-	int m_best;
-	std::unordered_map<int, int> m_memo;
+	int m_best_solution;
+	std::vector<int> m_partial_solutions;
 
 	bool backtrack(TileBoard board, SwipeAction action) {
 
@@ -124,8 +127,8 @@ class GameSolver {
 			return false;
 
 		if (board.tile_count() == 1) {
-			m_memo[board.move_count()] = board.tile_count();
-			m_best = std::min(board.move_count(), m_best);
+			m_partial_solutions[static_cast<std::size_t>(board.move_count())] = board.tile_count();
+			m_best_solution = std::min(board.move_count(), m_best_solution);
 			return true;
 		}
 
@@ -138,12 +141,9 @@ class GameSolver {
 		else if (action == SwipeAction::SWIPE_DOWN)
 			board.swipe_down();
 
-		if (!m_memo[board.move_count()])
-			m_memo[board.move_count()] = std::numeric_limits<int>::max();
-
-		if (board.tile_count() > m_memo[board.move_count()])
+		if (board.tile_count() > m_partial_solutions[static_cast<std::size_t>(board.move_count())])
 			return false;
-		m_memo[board.move_count()] = board.tile_count();
+		m_partial_solutions[static_cast<std::size_t>(board.move_count())] = board.tile_count();
 
 		return backtrack(board, SwipeAction::SWIPE_LEFT) |
 		       backtrack(board, SwipeAction::SWIPE_RIGHT) |
@@ -152,13 +152,16 @@ class GameSolver {
 	}
 
 public:
-	GameSolver(int max_moves) : m_max_moves(max_moves), m_best(max_moves) {}
+	GameSolver(int max_moves)
+	    : m_max_moves(max_moves),
+	      m_best_solution(max_moves),
+	      m_partial_solutions(static_cast<std::size_t>(m_max_moves + 1), std::numeric_limits<int>::max()) {}
 
-	std::string solve(TileBoard &board) {
-		m_memo[board.move_count()] = board.tile_count();
+	int solve(TileBoard &board) {
+		m_partial_solutions[static_cast<std::size_t>(board.move_count())] = board.tile_count();
 		return backtrack(board, SwipeAction::NONE)
-			   ? std::to_string(m_best)
-			   : "no solution";
+			   ? m_best_solution
+			   : -1;
 	}
 };
 
@@ -176,7 +179,11 @@ int main(void) {
 		GameSolver solver(max_moves);
 		TileBoard board(size);
 		std::cin >> board;
-		std::cout << solver.solve(board) << "\n";
+		auto answer = solver.solve(board);
+		if (answer != -1)
+			std::cout << answer << "\n";
+		else
+			std::cout << "no solution\n";
 	}
 	return EXIT_SUCCESS;
 }
