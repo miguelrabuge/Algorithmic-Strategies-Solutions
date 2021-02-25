@@ -1,9 +1,11 @@
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <optional>
 #include <unordered_map>
 #include <vector>
 
+std::size_t sum = 0;
 using Matrix = std::vector<std::vector<int>>;
 
 enum class SwipeAction {
@@ -66,6 +68,10 @@ public:
 		return m_tiles;
 	}
 
+	std::size_t size() const {
+		return m_matrix.size();
+	}
+
 	void swipe_left() {
 		for (auto &row : m_matrix) {
 			TileBoard::horizontal_swipe(row.begin(), row.end());
@@ -94,12 +100,28 @@ public:
 		++m_moves;
 	}
 
+	bool is_solvable() {
+		return std::fmod(sum, 1) == 0.0;
+	}
+
+	bool operator==(TileBoard const &other) {
+		for (std::size_t i = 0; i < m_matrix.size(); ++i) {
+			for (std::size_t j = 0; j < m_matrix.size(); ++j) {
+				if (m_matrix[i][j] != other.m_matrix[i][j])
+					return false;
+			}
+		}
+		return true;
+	}
+
 	friend std::istream &operator>>(std::istream &is, TileBoard &board) {
+		sum = 0;
 		for (std::size_t i = 0; i < board.m_matrix.size(); ++i) {
 			for (std::size_t j = 0; j < board.m_matrix.size(); ++j) {
 				std::cin >> board.m_matrix[i][j];
 				if (board.m_matrix[i][j])
 					++board.m_tiles;
+				sum += static_cast<std::size_t>(board.m_matrix[i][j]);
 			}
 		}
 		return is;
@@ -119,19 +141,24 @@ public:
 class GameSolver {
 	int m_max_moves;
 	int m_best_solution;
+
+	// Map the number of moves made with the number of tiles remaining (by applying those moves)
 	std::vector<int> m_partial_solutions;
 
 	bool backtrack(TileBoard board, SwipeAction action) {
-
+			
+		// moves == max_moves_allowed_by_the_problem_statement
 		if (board.move_count() == m_max_moves)
 			return false;
 
+		// non_zero_tiles_left_in_the_board == 1
 		if (board.tile_count() == 1) {
-			m_partial_solutions[static_cast<std::size_t>(board.move_count())] = board.tile_count();
+			m_partial_solutions[static_cast<std::size_t>(board.move_count())] = 1;
 			m_best_solution = std::min(board.move_count(), m_best_solution);
 			return true;
 		}
 
+		TileBoard saved = board;
 		if (action == SwipeAction::SWIPE_LEFT)
 			board.swipe_left();
 		else if (action == SwipeAction::SWIPE_RIGHT)
@@ -141,6 +168,11 @@ class GameSolver {
 		else if (action == SwipeAction::SWIPE_DOWN)
 			board.swipe_down();
 
+		if (action != SwipeAction::NONE && board == saved) {
+			return false;
+		}
+
+		// Number of tiles of the given board with N moves is worse then the best number of tiles with the same N moves
 		if (board.tile_count() > m_partial_solutions[static_cast<std::size_t>(board.move_count())])
 			return false;
 		m_partial_solutions[static_cast<std::size_t>(board.move_count())] = board.tile_count();
@@ -158,8 +190,7 @@ public:
 	      m_partial_solutions(static_cast<std::size_t>(m_max_moves + 1), std::numeric_limits<int>::max()) {}
 
 	int solve(TileBoard &board) {
-		m_partial_solutions[static_cast<std::size_t>(board.move_count())] = board.tile_count();
-		return backtrack(board, SwipeAction::NONE)
+		return board.is_solvable() && backtrack(board, SwipeAction::NONE)
 			   ? m_best_solution
 			   : -1;
 	}

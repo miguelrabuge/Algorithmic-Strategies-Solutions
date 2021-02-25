@@ -1,7 +1,7 @@
 
 # C++ Compiler and Flags
 CXX=g++
-CXX_FLAGS=-std=c++17 -O2 -pg
+CXX_FLAGS=-std=c++17 -O2 
 CXX_WARN_FLAGS=-Wall -Wextra -Wpedantic -pedantic-errors -Wconversion -Wsign-conversion
 CXX_LINK_FLAGS=-lm
 
