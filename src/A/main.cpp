@@ -68,10 +68,6 @@ public:
 		return m_tiles;
 	}
 
-	std::size_t size() const {
-		return m_matrix.size();
-	}
-
 	void swipe_left() {
 		for (auto &row : m_matrix) {
 			TileBoard::horizontal_swipe(row.begin(), row.end());
@@ -100,15 +96,45 @@ public:
 		++m_moves;
 	}
 
-	bool is_solvable() {
-		return std::fmod(sum, 1) == 0.0;
-	}
+	bool is_solvable() { return (sum & (sum - 1)) == 0; }
 
 	bool operator==(TileBoard const &other) {
 		for (std::size_t i = 0; i < m_matrix.size(); ++i) {
 			for (std::size_t j = 0; j < m_matrix.size(); ++j) {
 				if (m_matrix[i][j] != other.m_matrix[i][j])
 					return false;
+			}
+		}
+		return true;
+	}
+
+	bool horizontally_equivalent_to(TileBoard const &other) {
+		for (std::size_t i = 0; i < m_matrix.size(); ++i) {
+			for (std::size_t j = 0, k = 0; j < m_matrix.size() && k < m_matrix.size();) {
+				if (m_matrix[i][j] == 0)
+					++j;
+				else if (other.m_matrix[i][k] == 0)
+					++k;
+				else if (m_matrix[i][j] != other.m_matrix[i][k])
+					return false;
+				else
+					++j, ++k;
+			}
+		}
+		return true;
+	}
+
+	bool vertically_equivalent_to(TileBoard const &other) {
+		for (std::size_t i = 0, j = 0; i < m_matrix.size() && j < m_matrix.size();) {
+			for (std::size_t k = 0; k < m_matrix.size(); ++k) {
+				if (m_matrix[k][i] == 0)
+					++i;
+				else if (other.m_matrix[k][j] == 0)
+					++j;
+				else if (m_matrix[k][i] != other.m_matrix[k][j])
+					return false;
+				else
+					++i, ++j;
 			}
 		}
 		return true;
@@ -146,10 +172,11 @@ class GameSolver {
 	std::vector<int> m_partial_solutions;
 
 	bool backtrack(TileBoard board, SwipeAction action) {
-			
+
 		// moves == max_moves_allowed_by_the_problem_statement
-		if (board.move_count() == m_max_moves)
+		if (board.move_count() == m_max_moves) {
 			return false;
+		}
 
 		// non_zero_tiles_left_in_the_board == 1
 		if (board.tile_count() == 1) {
@@ -172,10 +199,24 @@ class GameSolver {
 			return false;
 		}
 
+		// if (((last_action == SwipeAction::SWIPE_LEFT && action == SwipeAction::SWIPE_RIGHT) ||
+		//      (last_action == SwipeAction::SWIPE_RIGHT && action == SwipeAction::SWIPE_LEFT)) &&
+		//     board.horizontally_equivalent_to(saved)) {
+		// 	return false;
+		// }
+
+		// if (((last_action == SwipeAction::SWIPE_UP && action == SwipeAction::SWIPE_DOWN) ||
+		//      (last_action == SwipeAction::SWIPE_DOWN && action == SwipeAction::SWIPE_UP)) &&
+		//     board.vertically_equivalent_to(saved)) {
+		// 	return false;
+		// }
+
 		// Number of tiles of the given board with N moves is worse then the best number of tiles with the same N moves
 		if (board.tile_count() > m_partial_solutions[static_cast<std::size_t>(board.move_count())])
 			return false;
 		m_partial_solutions[static_cast<std::size_t>(board.move_count())] = board.tile_count();
+
+		//last_action = action;
 
 		return backtrack(board, SwipeAction::SWIPE_LEFT) |
 		       backtrack(board, SwipeAction::SWIPE_RIGHT) |
