@@ -168,7 +168,7 @@ class GameSolver {
 	int m_max_moves;
 	int m_best_solution;
 
-	bool backtrack(TileBoard board, SwipeAction action) {
+	bool backtrack(TileBoard board, SwipeAction action, SwipeAction last_action) {
 
 		if (board.tile_count() == 1){
 			m_best_solution = std::min(board.move_count(), m_best_solution);
@@ -198,25 +198,25 @@ class GameSolver {
 			return false;
 		}
 
-		// if (((last_action == SwipeAction::SWIPE_LEFT && action == SwipeAction::SWIPE_RIGHT) ||
-		//      (last_action == SwipeAction::SWIPE_RIGHT && action == SwipeAction::SWIPE_LEFT)) &&
-		//     board.horizontally_equivalent_to(saved)) {
-		// 	return false;
-		// }
+		if (((last_action == SwipeAction::SWIPE_LEFT && action == SwipeAction::SWIPE_RIGHT) ||
+		     (last_action == SwipeAction::SWIPE_RIGHT && action == SwipeAction::SWIPE_LEFT)) &&
+		    board.horizontally_equivalent_to(saved)) {
+			return false;
+		}
 
-		// if (((last_action == SwipeAction::SWIPE_UP && action == SwipeAction::SWIPE_DOWN) ||
-		//      (last_action == SwipeAction::SWIPE_DOWN && action == SwipeAction::SWIPE_UP)) &&
-		//     board.vertically_equivalent_to(saved)) {
-		// 	return false;
-		// }
+		if (((last_action == SwipeAction::SWIPE_UP && action == SwipeAction::SWIPE_DOWN) ||
+		     (last_action == SwipeAction::SWIPE_DOWN && action == SwipeAction::SWIPE_UP)) &&
+		    board.vertically_equivalent_to(saved)) {
+			return false;
+		}
 
-		// last_action = action;
+		last_action = action;
 		
 		
-		return backtrack(board, SwipeAction::SWIPE_LEFT) |
-		       backtrack(board, SwipeAction::SWIPE_RIGHT) |
-		       backtrack(board, SwipeAction::SWIPE_UP) |
-		       backtrack(board, SwipeAction::SWIPE_DOWN);
+		return backtrack(board, SwipeAction::SWIPE_LEFT, last_action) |
+		       backtrack(board, SwipeAction::SWIPE_RIGHT, last_action) |
+		       backtrack(board, SwipeAction::SWIPE_UP, last_action) |
+		       backtrack(board, SwipeAction::SWIPE_DOWN, last_action);
 	}
 
 public:
@@ -225,7 +225,7 @@ public:
 	      m_best_solution(max_moves) {}
 
 	int solve(TileBoard &board) {
-		return board.is_solvable() && backtrack(board, SwipeAction::NONE)
+		return board.is_solvable() && backtrack(board, SwipeAction::NONE, SwipeAction::NONE)
 			   ? m_best_solution
 			   : -1;
 	}
