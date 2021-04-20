@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <optional>
-#include <unordered_map>
 #include <vector>
 
 std::size_t sum = 0;
@@ -125,16 +123,16 @@ public:
 	}
 
 	bool vertically_equivalent_to(TileBoard const &other) {
-		for (std::size_t i = 0, j = 0; i < m_matrix.size() && j < m_matrix.size();) {
-			for (std::size_t k = 0; k < m_matrix.size(); ++k) {
-				if (m_matrix[k][i] == 0)
-					++i;
-				else if (other.m_matrix[k][j] == 0)
+		for (std::size_t i = 0; i < m_matrix.size(); ++i) {
+			for (std::size_t j = 0, k = 0; j < m_matrix.size() && k < m_matrix.size();) {
+				if (m_matrix[j][i] == 0)
 					++j;
-				else if (m_matrix[k][i] != other.m_matrix[k][j])
+				else if (other.m_matrix[k][i] == 0)
+					++k;
+				else if (m_matrix[j][i] != other.m_matrix[k][i])
 					return false;
 				else
-					++i, ++j;
+					++j, ++k;
 			}
 		}
 		return true;
@@ -170,7 +168,7 @@ class GameSolver {
 
 	bool backtrack(TileBoard board, SwipeAction action, SwipeAction last_action) {
 
-		if (board.tile_count() == 1){
+		if (board.tile_count() == 1) {
 			m_best_solution = std::min(board.move_count(), m_best_solution);
 			return true;
 		}
@@ -180,7 +178,7 @@ class GameSolver {
 			return false;
 		}
 
-		if (board.move_count() == m_best_solution){
+		if (board.move_count() == m_best_solution) {
 			return false;
 		}
 
@@ -211,8 +209,7 @@ class GameSolver {
 		}
 
 		last_action = action;
-		
-		
+
 		return backtrack(board, SwipeAction::SWIPE_LEFT, last_action) |
 		       backtrack(board, SwipeAction::SWIPE_RIGHT, last_action) |
 		       backtrack(board, SwipeAction::SWIPE_UP, last_action) |
@@ -225,6 +222,8 @@ public:
 	      m_best_solution(max_moves) {}
 
 	int solve(TileBoard &board) {
+		if (sum == 0)
+			return 0;
 		return board.is_solvable() && backtrack(board, SwipeAction::NONE, SwipeAction::NONE)
 			   ? m_best_solution
 			   : -1;
