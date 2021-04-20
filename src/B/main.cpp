@@ -30,10 +30,10 @@ int mod_sub(int a, int b, int mod) {
 
 int solve(Matrix<int> &dp_matrix, unsigned int &max_width, unsigned int &block_height, unsigned int &max_height) {
 	dp_matrix[0][0] = 1;
-	size_t i,j;
+	
 	// Ascending Step
-	for (i = 0; i < max_height - block_height + 1; ++i) {
-		for (j = 0; j <= i && j < max_width; ++j) {
+	for (size_t i = 0; i < max_height - block_height + 1; ++i) {
+		for (size_t j = 0; j <= i && j < max_width - 1; ++j) {
 			if (dp_matrix[i][j] != 0) {
 				for (size_t k = i + 1; k < i + block_height && k < max_height - block_height + 1; ++k) {
 					dp_matrix[k][j + 1] = mod_add(dp_matrix[k][j + 1], dp_matrix[i][j], MODULE);
@@ -41,6 +41,7 @@ int solve(Matrix<int> &dp_matrix, unsigned int &max_width, unsigned int &block_h
 			}
 		}
 	}
+	
 	// Descending Step
 	for (size_t j = 2; j < max_width; ++j) {
 		for (size_t i = 0; i < max_height - block_height + 1; ++i){
