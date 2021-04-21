@@ -61,8 +61,8 @@ int main(void) {
     while(tests--) {
         std::cin >> n >> h >> H;
         depth = std::min(H - h, (h - 1) * (n - 1 - (n / 2))) + 1;
-        for (std::size_t i = 0; i < 60000; ++i){
-            std::fill(dp_matrix[i].begin(), dp_matrix[i].end(), 0);
+        for (std::size_t i = 0; i < depth; ++i){ 
+            std::fill(dp_matrix[i].begin(), dp_matrix[i].begin() + n, 0);
         }
         std::cout << solve(h, n, depth) << "\n";
     }
