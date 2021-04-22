@@ -19,7 +19,7 @@ int mod_sub(int a, int b, int mod) {
 	return mod_add(a, -b, mod);
 }
 
-void print_debug(std::size_t n,std::size_t  depth) {
+void print_debug(std::size_t n,std::size_t depth) {
     for (std::size_t i = 0; i < depth; ++i) {
         for (std::size_t j = 0; j < n; ++j) {
             std::cout << dp_matrix[i][j] << " ";
@@ -34,14 +34,22 @@ int solve(std::size_t &h, std::size_t &n, std::size_t &depth) {
     dp_matrix[0][0] = 1;
 
     // Ascending Step
-    for (j = 0; j < n - 1; ++j) {
-        for (i = j; (i < depth) && dp_matrix[i][j]; ++i) {
-            for (k = i + 1; (k < i + h) && (k < depth); ++k) {
-                dp_matrix[k][j + 1] = mod_add(dp_matrix[k][j + 1], dp_matrix[i][j], MODULE);
-            }
+    // for (j = 0; j < n - 1; ++j) {
+    //     for (i = j; (i < depth) && dp_matrix[i][j]; ++i) {
+    //         for (k = i + 1; (k < i + h) && (k < depth); ++k) {
+    //             dp_matrix[k][j + 1] = mod_add(dp_matrix[k][j + 1], dp_matrix[i][j], MODULE);
+    //         }
+    //     }
+    // }
+
+    // print_debug(n,depth);
+    for (j = 1; j < n; ++j) {
+        for (i = j; i < depth; ++i) {
+            dp_matrix[i][j] = mod_add(dp_matrix[i - 1][j], dp_matrix[i - 1][j - 1], MODULE);
+            if (h <= i && dp_matrix[i - h][j - 1]) 
+                dp_matrix[i][j] = mod_sub(dp_matrix[i][j], dp_matrix[i - h][j - 1], MODULE);
         }
     }
-
     // Descending Step
     for (j = 2; j < n; ++j) {
         for (i = 0; (i <= (h - 2) + (h - 1) * (j-2)) && (i < depth); ++i) {
