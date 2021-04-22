@@ -19,6 +19,15 @@ int mod_sub(int a, int b, int mod) {
 	return mod_add(a, -b, mod);
 }
 
+void print_debug(std::size_t n,std::size_t  depth) {
+    for (std::size_t i = 0; i < depth; ++i) {
+        for (std::size_t j = 0; j < n; ++j) {
+            std::cout << dp_matrix[i][j] << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
 int solve(std::size_t &h, std::size_t &n, std::size_t &depth) {
     std::size_t i, j, k;
     int sum = 0;
@@ -35,13 +44,12 @@ int solve(std::size_t &h, std::size_t &n, std::size_t &depth) {
 
     // Descending Step
     for (j = 2; j < n; ++j) {
-        for (i = 0; i < depth; ++i) {
+        for (i = 0; (i <= (h - 2) + (h - 1) * (j-2)) && (i < depth); ++i) {
             for (k = i + 1; (k < i + h) && (k < depth); ++k) {
                 dp_matrix[i][j] = mod_add(dp_matrix[i][j], dp_matrix[k][j - 1], MODULE);
             }
         }
-    }
-
+    }   
     // Sum
     for (j = 2; j < n; ++j) {
         sum = mod_add(sum, dp_matrix[0][j], MODULE);
@@ -60,7 +68,12 @@ int main(void) {
     std::cin >> tests;
     while(tests--) {
         std::cin >> n >> h >> H;
+        if (H < h) {
+            std::cout << "0\n";
+            continue;
+        }
         depth = std::min(H - h, (h - 1) * (n - 1 - (n / 2))) + 1;
+        // std::cout << "Old Depth: " << H - h << "\tCurrent Depth: " << depth - 1 << "\t";
         for (std::size_t i = 0; i < depth; ++i){ 
             std::fill(dp_matrix[i].begin(), dp_matrix[i].begin() + n, 0);
         }
