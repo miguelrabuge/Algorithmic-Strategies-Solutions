@@ -17,8 +17,8 @@ void make_set(S &pset, R &rank, V const i) {
 	rank[i] = 0;
 }
 
-template <typename Set, typename V>
-V find_set(Set &pset, V const i) {
+template <typename S, typename V>
+V find_set(S &pset, V const i) {
 	if (pset[i] != i)
 		pset[i] = find_set(pset, pset[i]);
 	return pset[i];
