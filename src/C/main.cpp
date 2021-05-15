@@ -71,8 +71,7 @@ class City {
 	void m_calculate_city_lanes() {
 		for (auto const &circuit : m_circuits) {
 			auto ll = m_kruskal(circuit);
-			if (ll > m_longest_lane.first ||
-			    (ll == m_longest_lane.first && m_longest_lane.second < circuit.size())) {
+			if (ll > m_longest_lane.first || (ll == m_longest_lane.first && m_longest_lane.second < circuit.size())) {
 				m_longest_lane = std::make_pair(ll, circuit.size());
 			}
 			m_total_lane_length += ll;
