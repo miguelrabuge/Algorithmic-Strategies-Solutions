@@ -1,2 +1,2 @@
-# Algorithmic_Strategies_Solutions
+# Algorithmic Strategies Solutions
 Solved problems for the Algorithmic Strategies subject
